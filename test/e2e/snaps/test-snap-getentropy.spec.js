@@ -13,7 +13,6 @@ describe('Test Snap getEntropy', function () {
       {
         fixtures: new FixtureBuilder().build(),
         ganacheOptions: defaultGanacheOptions,
-        failOnConsoleError: false,
         title: this.test.fullTitle(),
       },
       async ({ driver }) => {
@@ -21,46 +20,58 @@ describe('Test Snap getEntropy', function () {
 
         // navigate to test snaps page and connect to get-entropy snap
         await driver.driver.get(TEST_SNAPS_WEBSITE_URL);
-        await driver.delay(1000);
+
+        // wait for page to load
+        await driver.waitForSelector({
+          text: 'Installed Snaps',
+          tag: 'h2',
+        });
+
+        // scroll to get entropy snap
         const snapButton = await driver.findElement('#connectGetEntropySnap');
         await driver.scrollToElement(snapButton);
-        await driver.delay(1000);
-        await driver.clickElement('#connectGetEntropySnap');
-        await driver.delay(1000);
 
-        // switch to metamask extension and click connect
-        let windowHandles = await driver.waitUntilXWindowHandles(
-          2,
-          1000,
-          10000,
-        );
-        await driver.switchToWindowWithTitle(
-          WINDOW_TITLES.Dialog,
-          windowHandles,
-        );
+        // added delay for firefox (deflake)
+        await driver.delayFirefox(1000);
+
+        // wait for and click connect
+        await driver.waitForSelector('#connectGetEntropySnap');
+        await driver.clickElement('#connectGetEntropySnap');
+
+        // switch to metamask extension
+        await driver.switchToWindowWithTitle(WINDOW_TITLES.Dialog);
+
+        // wait for and click connect
+        await driver.waitForSelector({
+          text: 'Connect',
+          tag: 'button',
+        });
         await driver.clickElement({
           text: 'Connect',
           tag: 'button',
         });
 
-        await driver.waitForSelector({ text: 'Install' });
+        // wait for confirm selector
+        await driver.waitForSelector({ text: 'Confirm' });
 
+        // dismiss possible scroll element
         await driver.clickElementSafe('[data-testid="snap-install-scroll"]');
 
+        // click confirm button
         await driver.clickElement({
-          text: 'Install',
+          text: 'Confirm',
           tag: 'button',
         });
 
+        // wait for and click ok and wait for window to close
         await driver.waitForSelector({ text: 'OK' });
-
-        await driver.clickElement({
+        await driver.clickElementAndWaitForWindowToClose({
           text: 'OK',
           tag: 'button',
         });
 
         // click send inputs on test snap page
-        await driver.switchToWindowWithTitle('Test Snaps', windowHandles);
+        await driver.switchToWindowWithTitle(WINDOW_TITLES.TestSnaps);
 
         // wait for npm installation success
         await driver.waitForSelector({
@@ -70,26 +81,26 @@ describe('Test Snap getEntropy', function () {
 
         // find and click on send test
         await driver.pasteIntoField('#entropyMessage', '1234');
-        await driver.delay(500);
         const snapButton2 = await driver.findElement('#signEntropyMessage');
         await driver.scrollToElement(snapButton2);
         await driver.delay(500);
         await driver.clickElement('#signEntropyMessage');
 
-        // Switch to approve signature message window and approve
-        windowHandles = await driver.waitUntilXWindowHandles(2, 1000, 10000);
-        await driver.switchToWindowWithTitle(
-          WINDOW_TITLES.Dialog,
-          windowHandles,
-        );
-        await driver.clickElement({
+        // Switch to approve signature message window
+        await driver.switchToWindowWithTitle(WINDOW_TITLES.Dialog);
+
+        // wait for and click on approve and wait for window to close
+        await driver.waitForSelector({
+          text: 'Approve',
+          tag: 'button',
+        });
+        await driver.clickElementAndWaitForWindowToClose({
           text: 'Approve',
           tag: 'button',
         });
 
         // switch back to test-snaps page
-        windowHandles = await driver.waitUntilXWindowHandles(1, 1000, 10000);
-        await driver.switchToWindowWithTitle('Test Snaps', windowHandles);
+        await driver.switchToWindowWithTitle(WINDOW_TITLES.TestSnaps);
 
         // check the results of the message signature using waitForSelector
         await driver.waitForSelector({
