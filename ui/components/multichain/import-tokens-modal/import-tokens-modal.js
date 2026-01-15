@@ -13,20 +13,22 @@ import { Tab, Tabs } from '../../ui/tabs';
 import { useI18nContext } from '../../../hooks/useI18nContext';
 import {
   getCurrentChainId,
+  getSelectedNetworkClientId,
+} from '../../../../shared/modules/selectors/networks';
+import {
+  getInternalAccounts,
   getIsDynamicTokenListAvailable,
   getIsMainnet,
   getIsTokenDetectionInactiveOnMainnet,
   getIsTokenDetectionSupported,
   getIstokenDetectionInactiveOnNonMainnetSupportedNetwork,
-  getMetaMaskIdentities,
   getRpcPrefsForCurrentProvider,
-  getSelectedAddress,
-  getSelectedNetworkClientId,
+  getSelectedInternalAccount,
   getTokenDetectionSupportNetworkByChainId,
   getTokenList,
   getCurrentNetwork,
   getTestNetworkBackgroundColor,
-  contractExchangeRateSelector,
+  getTokenExchangeRates,
 } from '../../../selectors';
 import {
   addImportedTokens,
@@ -73,6 +75,8 @@ import {
   isValidHexAddress,
   toChecksumHexAddress,
 } from '../../../../shared/modules/hexstring-utils';
+// TODO: Remove restricted import
+// eslint-disable-next-line import/no-restricted-paths
 import { addHexPrefix } from '../../../../app/scripts/lib/util';
 import { STATIC_MAINNET_TOKEN_LIST } from '../../../../shared/constants/tokens';
 import {
@@ -132,12 +136,12 @@ export const ImportTokensModal = ({ onClose }) => {
   const isDynamicTokenListAvailable = useSelector(
     getIsDynamicTokenListAvailable,
   );
-  const selectedAddress = useSelector(getSelectedAddress);
+  const selectedAccount = useSelector(getSelectedInternalAccount);
   const isMainnet = useSelector(getIsMainnet);
-  const identities = useSelector(getMetaMaskIdentities);
+  const accounts = useSelector(getInternalAccounts);
   const tokens = useSelector((state) => state.metamask.tokens);
   const rpcPrefs = useSelector(getRpcPrefsForCurrentProvider);
-  const contractExchangeRates = useSelector(contractExchangeRateSelector);
+  const contractExchangeRates = useSelector(getTokenExchangeRates);
 
   const [customAddress, setCustomAddress] = useState('');
   const [customAddressError, setCustomAddressError] = useState(null);
@@ -411,7 +415,7 @@ export const ImportTokensModal = ({ onClose }) => {
       try {
         ({ standard } = await getTokenStandardAndDetails(
           standardAddress,
-          selectedAddress,
+          selectedAccount.address,
           null,
         ));
       } catch (error) {
@@ -459,7 +463,12 @@ export const ImportTokensModal = ({ onClose }) => {
         setShowSymbolAndDecimals(false);
         break;
 
-      case Boolean(identities[standardAddress]):
+      case Boolean(
+        accounts.find(
+          (internalAccount) =>
+            internalAccount.address.toLowerCase() === standardAddress,
+        ),
+      ):
         setCustomAddressError(t('personalAddressDetected'));
         setShowSymbolAndDecimals(false);
         break;
@@ -486,7 +495,6 @@ export const ImportTokensModal = ({ onClose }) => {
   return (
     <Modal
       isOpen
-      isClosedOnOutsideClick={false}
       onClose={() => {
         dispatch(clearPendingTokens());
         onClose();

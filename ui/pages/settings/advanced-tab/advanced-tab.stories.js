@@ -12,22 +12,25 @@ export default {
     showFiatInTestnets: { control: 'boolean' },
     useLedgerLive: { control: 'boolean' },
     dismissSeedBackUpReminder: { control: 'boolean' },
+    overrideContentSecurityPolicyHeader: { control: 'boolean' },
     setAutoLockTimeLimit: { action: 'setAutoLockTimeLimit' },
     setShowFiatConversionOnTestnetsPreference: {
       action: 'setShowFiatConversionOnTestnetsPreference',
     },
     setShowTestNetworks: { action: 'setShowTestNetworks' },
     setIpfsGateway: { action: 'setIpfsGateway' },
+    setIsIpfsGatewayEnabled: { action: 'setIsIpfsGatewayEnabled' },
     setDismissSeedBackUpReminder: { action: 'setDismissSeedBackUpReminder' },
+    setOverrideContentSecurityPolicyHeader: {
+      action: 'setOverrideContentSecurityPolicyHeader',
+    },
     setUseNonceField: { action: 'setUseNonceField' },
     setHexDataFeatureFlag: { action: 'setHexDataFeatureFlag' },
-    displayWarning: { action: 'displayWarning' },
+    displayErrorInSettings: { action: 'displayErrorInSettings' },
+    hideErrorInSettings: { action: 'hideErrorInSettings' },
     history: { action: 'history' },
     showResetAccountConfirmationModal: {
       action: 'showResetAccountConfirmationModal',
-    },
-    showEthSignModal: {
-      action: 'showEthSignModal',
     },
   },
 };
@@ -39,6 +42,7 @@ export const DefaultStory = (args) => {
       sendHexData,
       showFiatInTestnets,
       dismissSeedBackUpReminder,
+      overrideContentSecurityPolicyHeader,
     },
     updateArgs,
   ] = useArgs();
@@ -66,6 +70,12 @@ export const DefaultStory = (args) => {
       dismissSeedBackUpReminder: !dismissSeedBackUpReminder,
     });
   };
+
+  const handleOverrideContentSecurityPolicyHeader = () => {
+    updateArgs({
+      overrideContentSecurityPolicyHeader: !overrideContentSecurityPolicyHeader,
+    });
+  };
   return (
     <div style={{ flex: 1, height: 500 }}>
       <AdvancedTab
@@ -78,6 +88,12 @@ export const DefaultStory = (args) => {
         setShowFiatConversionOnTestnetsPreference={handleShowFiatInTestnets}
         dismissSeedBackUpReminder={dismissSeedBackUpReminder}
         setDismissSeedBackUpReminder={handleDismissSeedBackUpReminder}
+        overrideContentSecurityPolicyHeader={
+          overrideContentSecurityPolicyHeader
+        }
+        setOverrideContentSecurityPolicyHeader={
+          handleOverrideContentSecurityPolicyHeader
+        }
         ipfsGateway="ipfs-gateway"
       />
     </div>
@@ -92,4 +108,5 @@ DefaultStory.args = {
   showFiatInTestnets: false,
   useLedgerLive: false,
   dismissSeedBackUpReminder: false,
+  overrideContentSecurityPolicyHeader: true,
 };

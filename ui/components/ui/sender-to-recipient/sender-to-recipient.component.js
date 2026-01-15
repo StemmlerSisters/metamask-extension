@@ -101,7 +101,6 @@ SenderAddress.propTypes = {
 };
 
 export function RecipientWithAddress({
-  recipientAddress,
   checksummedRecipientAddress,
   onRecipientClick,
   addressOnly,
@@ -110,6 +109,7 @@ export function RecipientWithAddress({
   recipientName,
   recipientMetadataName,
   recipientIsOwnedAccount,
+  chainId,
 }) {
   const t = useI18nContext();
   const [showNicknamePopovers, setShowNicknamePopovers] = useState(false);
@@ -129,23 +129,13 @@ export function RecipientWithAddress({
     );
   }
 
-  let displayName;
-  if (petnamesEnabled) {
-    displayName = (
-      <Name value={recipientAddress} type={NameType.ETHEREUM_ADDRESS} />
-    );
-  } else {
-    displayName =
-      recipientName ||
+  const displayName =
+    (recipientName ||
       recipientNickname ||
       recipientMetadataName ||
       recipientEns ||
-      shortenAddress(checksummedRecipientAddress);
-
-    if (addressOnly && !displayName) {
-      displayName = t('newContract');
-    }
-  }
+      shortenAddress(checksummedRecipientAddress)) ??
+    (!addressOnly && t('newContract'));
 
   return (
     <>
@@ -163,9 +153,11 @@ export function RecipientWithAddress({
           }
         }}
       >
-        <div className="sender-to-recipient__sender-icon">
-          <Identicon address={checksummedRecipientAddress} diameter={24} />
-        </div>
+        {!petnamesEnabled && (
+          <div className="sender-to-recipient__sender-icon">
+            <Identicon address={checksummedRecipientAddress} diameter={24} />
+          </div>
+        )}
         <Tooltip
           position="bottom"
           disabled={!recipientName}
@@ -174,12 +166,20 @@ export function RecipientWithAddress({
           containerClassName="sender-to-recipient__tooltip-container"
           onHidden={() => setAddressCopied(false)}
         >
-          <div
-            className="sender-to-recipient__name"
-            data-testid="sender-to-recipient__name"
-          >
-            {displayName}
-          </div>
+          {petnamesEnabled ? (
+            <Name
+              value={checksummedRecipientAddress}
+              type={NameType.ETHEREUM_ADDRESS}
+              variation={chainId}
+            />
+          ) : (
+            <div
+              className="sender-to-recipient__name"
+              data-testid="sender-to-recipient__name"
+            >
+              {displayName}
+            </div>
+          )}
         </Tooltip>
       </div>
       {showNicknamePopovers && !petnamesEnabled ? (
@@ -193,7 +193,6 @@ export function RecipientWithAddress({
 }
 
 RecipientWithAddress.propTypes = {
-  recipientAddress: PropTypes.string,
   checksummedRecipientAddress: PropTypes.string,
   recipientName: PropTypes.string,
   recipientMetadataName: PropTypes.string,
@@ -202,6 +201,7 @@ RecipientWithAddress.propTypes = {
   addressOnly: PropTypes.bool,
   onRecipientClick: PropTypes.func,
   recipientIsOwnedAccount: PropTypes.bool,
+  chainId: PropTypes.string,
 };
 
 function Arrow({ variant }) {
@@ -236,6 +236,7 @@ export default function SenderToRecipient({
   variant,
   warnUserOnAccountMismatch,
   recipientIsOwnedAccount,
+  chainId,
 }) {
   const t = useI18nContext();
   const checksummedSenderAddress = toChecksumHexAddress(senderAddress);
@@ -257,7 +258,6 @@ export default function SenderToRecipient({
       <Arrow variant={variant} />
       {recipientAddress ? (
         <RecipientWithAddress
-          recipientAddress={recipientAddress}
           checksummedRecipientAddress={checksummedRecipientAddress}
           onRecipientClick={onRecipientClick}
           addressOnly={addressOnly}
@@ -266,6 +266,7 @@ export default function SenderToRecipient({
           recipientName={recipientName}
           recipientMetadataName={recipientMetadataName}
           recipientIsOwnedAccount={recipientIsOwnedAccount}
+          chainId={chainId}
         />
       ) : (
         <div className="sender-to-recipient__party sender-to-recipient__party--recipient">
@@ -296,4 +297,5 @@ SenderToRecipient.propTypes = {
   onSenderClick: PropTypes.func,
   warnUserOnAccountMismatch: PropTypes.bool,
   recipientIsOwnedAccount: PropTypes.bool,
+  chainId: PropTypes.string,
 };

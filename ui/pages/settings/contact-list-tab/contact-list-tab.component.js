@@ -8,7 +8,7 @@ import {
   CONTACT_VIEW_ROUTE,
 } from '../../../helpers/constants/routes';
 import {
-  getNumberOfSettingsInSection,
+  getNumberOfSettingRoutesInTab,
   handleSettingsRefs,
 } from '../../../helpers/utils/settings-search';
 import {
@@ -29,6 +29,7 @@ export default class ContactListTab extends Component {
 
   static propTypes = {
     addressBook: PropTypes.array,
+    internalAccounts: PropTypes.array,
     history: PropTypes.object,
     selectedAddress: PropTypes.string,
     viewingContact: PropTypes.bool,
@@ -39,7 +40,7 @@ export default class ContactListTab extends Component {
   };
 
   settingsRefs = Array(
-    getNumberOfSettingsInSection(this.context.t, this.context.t('contacts')),
+    getNumberOfSettingRoutesInTab(this.context.t, this.context.t('contacts')),
   )
     .fill(undefined)
     .map(() => {
@@ -57,7 +58,8 @@ export default class ContactListTab extends Component {
   }
 
   renderAddresses() {
-    const { addressBook, history, selectedAddress } = this.props;
+    const { addressBook, internalAccounts, history, selectedAddress } =
+      this.props;
     const contacts = addressBook.filter(({ name }) => Boolean(name));
     const nonContacts = addressBook.filter(({ name }) => !name);
     const { t } = this.context;
@@ -66,6 +68,8 @@ export default class ContactListTab extends Component {
       return (
         <div>
           <ContactList
+            addressBook={addressBook}
+            internalAccounts={internalAccounts}
             searchForContacts={() => contacts}
             searchForRecents={() => nonContacts}
             selectRecipient={(address) => {

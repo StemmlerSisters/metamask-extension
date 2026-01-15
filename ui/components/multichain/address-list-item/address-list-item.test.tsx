@@ -11,29 +11,71 @@ const SAMPLE_LABEL = 'metamask.eth';
 
 const mockOnClick = jest.fn();
 
-const render = () => {
+type Options = {
+  label?: string;
+  useConfusable?: boolean;
+  isDuplicate?: boolean;
+};
+
+const render = (options?: Options) => {
   return renderWithProvider(
     <AddressListItem
       address={SAMPLE_ADDRESS}
-      label={SAMPLE_LABEL}
+      label={options?.label || SAMPLE_LABEL}
+      useConfusable={options?.useConfusable}
       onClick={mockOnClick}
+      isDuplicate={options?.isDuplicate}
     />,
     configureStore(mockState),
   );
 };
 
 describe('AddressListItem', () => {
-  it('renders the address and label', () => {
-    const { getByText } = render();
+  it('renders the address and label without duplicate contact warning icon', () => {
+    const { getByText, container } = render();
+    expect(container).toMatchSnapshot();
 
     expect(getByText(shortenAddress(SAMPLE_ADDRESS))).toBeInTheDocument();
-    expect(getByText(SAMPLE_LABEL)).toBeInTheDocument();
+    expect(
+      document.querySelector(
+        '.address-list-item__duplicate-contact-warning-icon',
+      ),
+    ).not.toBeInTheDocument();
+  });
+
+  it('uses a confusable when it should', () => {
+    const { container } = render({
+      label: 'metamask.eth',
+      useConfusable: true,
+    });
+    expect(container).toMatchSnapshot();
+
+    expect(document.querySelector('.confusable__point')).toBeInTheDocument();
+  });
+
+  it('does not force red text when unnecessary', () => {
+    render({ label: 'metamask.eth' });
+    expect(
+      document.querySelector('.confusable__point'),
+    ).not.toBeInTheDocument();
   });
 
   it('fires onClick when the item is clicked', () => {
     render();
-    fireEvent.click(document.querySelector('button'));
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    fireEvent.click(document.querySelector('button')!);
 
     expect(mockOnClick).toHaveBeenCalled();
+  });
+
+  it('displays duplicate contact warning icon', () => {
+    const { container } = render({ isDuplicate: true });
+
+    expect(container).toMatchSnapshot();
+    expect(
+      document.querySelector(
+        '.address-list-item__duplicate-contact-warning-icon',
+      ),
+    ).toBeInTheDocument();
   });
 });
